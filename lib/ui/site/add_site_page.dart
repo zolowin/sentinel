@@ -257,13 +257,14 @@ class _AddSiteState extends State<AddSite> {
       address: addressController.text,
       quantity: int.parse(quantityController.text),
       image : siteImage,
+      update: new DateTime.now(),
     );
     var id = await dao.insertSite(site);
     resetValuesAfterSubmit();
     Navigator.pushNamed(
       context,
       AddBarn.routeName,
-      arguments: ScreenArguments(id, site.name, site.address, site.quantity, site.image),
+      arguments: ScreenArguments(id, site.name, site.address, site.quantity, site.image, site.update),
     );
   }
 
@@ -278,6 +279,7 @@ class _AddSiteState extends State<AddSite> {
       name: nameController.text,
       address: addressController.text,
       quantity: int.parse(quantityController.text),
+      update: new DateTime.now(),
     );
     print('edit');
     dao.updateSite(site);
@@ -286,7 +288,7 @@ class _AddSiteState extends State<AddSite> {
       context,
       AddBarn.routeName,
       arguments:
-          ScreenArguments(site.id, site.name, site.address, site.quantity, site.image),
+          ScreenArguments(site.id, site.name, site.address, site.quantity, site.image, site.update),
     );
   }
 
@@ -305,6 +307,7 @@ class ScreenArguments {
   final String address;
   final int quantity;
   final String image;
+  final DateTime update;
 
-  ScreenArguments(this.id, this.name, this.address, this.quantity, this.image);
+  ScreenArguments(this.id, this.name, this.address, this.quantity, this.image, this.update);
 }

@@ -103,6 +103,7 @@ class _AddBarnState extends State<AddBarn> {
                 decoration: InputDecoration(
                   labelText: "Number of Pens",
                   labelStyle: _labelStyle,
+                  errorMaxLines: 2,
                 ),
               ),
             ),
@@ -191,6 +192,7 @@ class _AddBarnState extends State<AddBarn> {
         name: namesControllers[i].text,
         quantity: int.parse(quantityController[i].text),
         site_id: siteId,
+        update: new DateTime.now(),
       );
       print(barn.quantity);
       dao.insertBarn(barn);

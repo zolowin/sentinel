@@ -10,4 +10,6 @@ class Sites extends Table {
   IntColumn get quantity => integer().nullable()();
 
   TextColumn get image => text().nullable()();
+
+  DateTimeColumn get update => dateTime().nullable()();
 }

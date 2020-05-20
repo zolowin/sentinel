@@ -1,16 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sentinel/core/database/dao/barn_dao.dart';
 import 'package:sentinel/ui/site/add_site_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:intl/intl.dart';
+
 
 import '../../core/database/dao/site_dao.dart';
 import '../login/login_page.dart';
 import 'site_detail.dart';
 import '../../core/database/app_database.dart';
-import '../login/login_page.dart';
 
 class SiteList extends StatefulWidget {
   static const routeName = '/siteList';
@@ -21,7 +23,18 @@ class SiteList extends StatefulWidget {
 class _SiteListState extends State<SiteList> {
   SharedPreferences logindata;
   String username;
-  String _base64;
+  int _textFromFile = 0;
+  var formatter = new DateFormat('E, MMM dd hh-mm-ss');
+
+  _SiteListState() {
+    getPoBarns(context, 1).then((val) => setState(() {
+      _textFromFile = val;
+    }));
+  }
+
+  @override
+  // TODO: implement context
+  BuildContext get context => super.context;
 
   @override
   void initState() {
@@ -44,9 +57,15 @@ class _SiteListState extends State<SiteList> {
     return Image.memory(_bytesImage);
   }
 
+  getPoBarns(BuildContext context, id) async{
+    final dao = Provider.of<BarnDao>(context);
+    final count = await dao.getCountPoBarnBySiteID(id);
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget _buildListItem(Site itemSite) {
+    Widget _buildListItem(Site itemSite)  {
       return GestureDetector(
         child: Stack(
           children: <Widget>[
@@ -54,7 +73,7 @@ class _SiteListState extends State<SiteList> {
               children: <Widget>[
                 Expanded(
                   flex: 2,
-                  child: _buildSiteImage(itemSite.image),
+                  child: itemSite.image != null ? _buildSiteImage(itemSite.image) : Container(),
                 ),
                 Expanded(
                   flex: 8,
@@ -70,7 +89,8 @@ class _SiteListState extends State<SiteList> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          subtitle: Text("Updated: SAT, JUN ${itemSite.id} 7:30 PM"),
+//                          subtitle: Text("Updated: SAT, JUN ${itemSite.id} 7:30 PM"),
+                            subtitle: itemSite.update != null ? Text("Updated at: ${formatter.format(itemSite.update)}") : Text(""),
                         ),
                       ),
                       Container(
@@ -82,7 +102,7 @@ class _SiteListState extends State<SiteList> {
                             style: TextStyle(fontSize: 14.0),
                             children: <TextSpan>[
                               TextSpan(
-                                  text: itemSite.quantity.toString(),
+                                  text:  itemSite.quantity.toString(),
                                   style: TextStyle(
                                     color: Colors.lightBlue,
                                   )),
@@ -102,14 +122,14 @@ class _SiteListState extends State<SiteList> {
               child: IconButton(
                 icon: Icon(Icons.keyboard_arrow_right), iconSize: 35.0,
                 onPressed: () {
-                  Navigator.pushNamed(context, SiteDetail.routeName, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image));
+                  Navigator.pushNamed(context, SiteDetail.routeName, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image, itemSite.update));
                 },
               ),
             )
           ],
         ),
         onTap: () {
-          Navigator.pushNamed(context, SiteDetail.routeName, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image));
+          Navigator.pushNamed(context, SiteDetail.routeName, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image, itemSite.update));
         },
       );
     }
@@ -125,7 +145,7 @@ class _SiteListState extends State<SiteList> {
             separatorBuilder: (context, index) => Divider(
               color: Color(0xffD8D8D8),
             ),
-            itemCount: sites.length,
+            itemCount: sites.length ?? 0,
             // ignore: missing_return
             itemBuilder: (_, index) {
               final itemSite = sites[index];
@@ -207,13 +227,14 @@ class _SiteListState extends State<SiteList> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  subtitle: Text(
+                  subtitle: username != null ? Text(
                     username,
                     style: TextStyle(
                       fontSize: 18.0,
                       color: Colors.black,
                     ),
-                  ),
+                  )
+                  : Text(""),
                 ),
               ],
             ),

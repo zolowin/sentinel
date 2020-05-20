@@ -23,6 +23,16 @@ class BarnDao extends DatabaseAccessor<AppDatabase> with _$BarnDaoMixin {
   Future<Barn> getBarnById(int id) => (select(barns)
     ..where((t) => t.id.equals(id))).getSingle();
 
+  Future<int> getCountPoBarnBySiteID(int id) async {
+    int count = 0;
+    List<Barn> barns = await getAllBarnsBySiteId(id);
+
+    for(var item in barns) {
+      count += item.quantity;
+    }
+    return barns == null ? 0 : count;
+  }
+
   Stream<List<Barn>> watchAllBarns() => (select(barns)
     ..orderBy(
         [(c) => OrderingTerm(expression: c.id, mode: OrderingMode.desc)]))

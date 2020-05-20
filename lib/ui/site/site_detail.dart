@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:intl/intl.dart';
 
 import 'site_list.dart';
 import 'add_site_page.dart';
@@ -16,12 +17,14 @@ class SiteDetail extends StatefulWidget {
 }
 
 class _SiteDetailState extends State<SiteDetail> {
+  var formatter = new DateFormat('E, MMM dd hh-mm-ss');
+
 
   Widget _buildSiteImage(base64) {
     Uint8List _bytesImage;
 
     _bytesImage = Base64Decoder().convert(base64);
-    return Image.memory(_bytesImage);
+    return Image.memory(_bytesImage, fit: BoxFit.fill,);
   }
 
   @override
@@ -55,8 +58,7 @@ class _SiteDetailState extends State<SiteDetail> {
                             ),
                           ),
                           subtitle:
-                          Text("Updated: SAT, JUN ${itemBarn.id} 7:30 PM"),
-                        ),
+                          Text("Updated at: ${formatter.format(itemBarn.update)}"),                        ),
                       ),
                       Container(
                         alignment: Alignment.bottomLeft,
@@ -134,7 +136,11 @@ class _SiteDetailState extends State<SiteDetail> {
           children: <Widget>[
             Stack(
               children: <Widget>[
-                _buildSiteImage(arguments.image),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: 340.0,
+                  child: arguments.image != null ? _buildSiteImage(arguments.image) : Container(),
+                ),
                 Container(
                   padding: EdgeInsets.only(left: 10.0),
                   child: Column(
@@ -185,8 +191,7 @@ class _SiteDetailState extends State<SiteDetail> {
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600),
                           ),
-                          subtitle: Text(
-                            "Updated: Mar ${arguments.id}, 2020 9:51 PM",
+                          subtitle: Text("Updated at: ${formatter.format(arguments.update)}",
                             style: TextStyle(
                               fontSize: 18.0,
                               color: Colors.white,

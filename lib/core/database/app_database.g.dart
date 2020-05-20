@@ -13,12 +13,20 @@ class Site extends DataClass implements Insertable<Site> {
   final String address;
   final int quantity;
   final String image;
-  Site({this.id, this.name, this.address, this.quantity, this.image});
+  final DateTime update;
+  Site(
+      {this.id,
+      this.name,
+      this.address,
+      this.quantity,
+      this.image,
+      this.update});
   factory Site.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
     final stringType = db.typeSystem.forDartType<String>();
+    final dateTimeType = db.typeSystem.forDartType<DateTime>();
     return Site(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
@@ -28,6 +36,8 @@ class Site extends DataClass implements Insertable<Site> {
           intType.mapFromDatabaseResponse(data['${effectivePrefix}quantity']),
       image:
           stringType.mapFromDatabaseResponse(data['${effectivePrefix}image']),
+      update: dateTimeType
+          .mapFromDatabaseResponse(data['${effectivePrefix}update']),
     );
   }
   factory Site.fromJson(Map<String, dynamic> json,
@@ -39,6 +49,7 @@ class Site extends DataClass implements Insertable<Site> {
       address: serializer.fromJson<String>(json['address']),
       quantity: serializer.fromJson<int>(json['quantity']),
       image: serializer.fromJson<String>(json['image']),
+      update: serializer.fromJson<DateTime>(json['update']),
     );
   }
   @override
@@ -50,6 +61,7 @@ class Site extends DataClass implements Insertable<Site> {
       'address': serializer.toJson<String>(address),
       'quantity': serializer.toJson<int>(quantity),
       'image': serializer.toJson<String>(image),
+      'update': serializer.toJson<DateTime>(update),
     };
   }
 
@@ -66,17 +78,25 @@ class Site extends DataClass implements Insertable<Site> {
           : Value(quantity),
       image:
           image == null && nullToAbsent ? const Value.absent() : Value(image),
+      update:
+          update == null && nullToAbsent ? const Value.absent() : Value(update),
     );
   }
 
   Site copyWith(
-          {int id, String name, String address, int quantity, String image}) =>
+          {int id,
+          String name,
+          String address,
+          int quantity,
+          String image,
+          DateTime update}) =>
       Site(
         id: id ?? this.id,
         name: name ?? this.name,
         address: address ?? this.address,
         quantity: quantity ?? this.quantity,
         image: image ?? this.image,
+        update: update ?? this.update,
       );
   @override
   String toString() {
@@ -85,7 +105,8 @@ class Site extends DataClass implements Insertable<Site> {
           ..write('name: $name, ')
           ..write('address: $address, ')
           ..write('quantity: $quantity, ')
-          ..write('image: $image')
+          ..write('image: $image, ')
+          ..write('update: $update')
           ..write(')'))
         .toString();
   }
@@ -93,8 +114,12 @@ class Site extends DataClass implements Insertable<Site> {
   @override
   int get hashCode => $mrjf($mrjc(
       id.hashCode,
-      $mrjc(name.hashCode,
-          $mrjc(address.hashCode, $mrjc(quantity.hashCode, image.hashCode)))));
+      $mrjc(
+          name.hashCode,
+          $mrjc(
+              address.hashCode,
+              $mrjc(quantity.hashCode,
+                  $mrjc(image.hashCode, update.hashCode))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -103,7 +128,8 @@ class Site extends DataClass implements Insertable<Site> {
           other.name == this.name &&
           other.address == this.address &&
           other.quantity == this.quantity &&
-          other.image == this.image);
+          other.image == this.image &&
+          other.update == this.update);
 }
 
 class SitesCompanion extends UpdateCompanion<Site> {
@@ -112,12 +138,14 @@ class SitesCompanion extends UpdateCompanion<Site> {
   final Value<String> address;
   final Value<int> quantity;
   final Value<String> image;
+  final Value<DateTime> update;
   const SitesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.address = const Value.absent(),
     this.quantity = const Value.absent(),
     this.image = const Value.absent(),
+    this.update = const Value.absent(),
   });
   SitesCompanion.insert({
     this.id = const Value.absent(),
@@ -125,19 +153,22 @@ class SitesCompanion extends UpdateCompanion<Site> {
     this.address = const Value.absent(),
     this.quantity = const Value.absent(),
     this.image = const Value.absent(),
+    this.update = const Value.absent(),
   });
   SitesCompanion copyWith(
       {Value<int> id,
       Value<String> name,
       Value<String> address,
       Value<int> quantity,
-      Value<String> image}) {
+      Value<String> image,
+      Value<DateTime> update}) {
     return SitesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       address: address ?? this.address,
       quantity: quantity ?? this.quantity,
       image: image ?? this.image,
+      update: update ?? this.update,
     );
   }
 }
@@ -203,8 +234,21 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
     );
   }
 
+  final VerificationMeta _updateMeta = const VerificationMeta('update');
+  GeneratedDateTimeColumn _update;
   @override
-  List<GeneratedColumn> get $columns => [id, name, address, quantity, image];
+  GeneratedDateTimeColumn get update => _update ??= _constructUpdate();
+  GeneratedDateTimeColumn _constructUpdate() {
+    return GeneratedDateTimeColumn(
+      'update',
+      $tableName,
+      true,
+    );
+  }
+
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, address, quantity, image, update];
   @override
   $SitesTable get asDslTable => this;
   @override
@@ -233,6 +277,10 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
     if (d.image.present) {
       context.handle(
           _imageMeta, image.isAcceptableValue(d.image.value, _imageMeta));
+    }
+    if (d.update.present) {
+      context.handle(
+          _updateMeta, update.isAcceptableValue(d.update.value, _updateMeta));
     }
     return context;
   }
@@ -263,6 +311,9 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
     if (d.image.present) {
       map['image'] = Variable<String, StringType>(d.image.value);
     }
+    if (d.update.present) {
+      map['update'] = Variable<DateTime, DateTimeType>(d.update.value);
+    }
     return map;
   }
 
@@ -277,12 +328,14 @@ class Barn extends DataClass implements Insertable<Barn> {
   final String name;
   final int quantity;
   final int site_id;
-  Barn({this.id, this.name, this.quantity, this.site_id});
+  final DateTime update;
+  Barn({this.id, this.name, this.quantity, this.site_id, this.update});
   factory Barn.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
     final stringType = db.typeSystem.forDartType<String>();
+    final dateTimeType = db.typeSystem.forDartType<DateTime>();
     return Barn(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
@@ -290,6 +343,8 @@ class Barn extends DataClass implements Insertable<Barn> {
           intType.mapFromDatabaseResponse(data['${effectivePrefix}quantity']),
       site_id:
           intType.mapFromDatabaseResponse(data['${effectivePrefix}site_id']),
+      update: dateTimeType
+          .mapFromDatabaseResponse(data['${effectivePrefix}update']),
     );
   }
   factory Barn.fromJson(Map<String, dynamic> json,
@@ -300,6 +355,7 @@ class Barn extends DataClass implements Insertable<Barn> {
       name: serializer.fromJson<String>(json['name']),
       quantity: serializer.fromJson<int>(json['quantity']),
       site_id: serializer.fromJson<int>(json['site_id']),
+      update: serializer.fromJson<DateTime>(json['update']),
     );
   }
   @override
@@ -310,6 +366,7 @@ class Barn extends DataClass implements Insertable<Barn> {
       'name': serializer.toJson<String>(name),
       'quantity': serializer.toJson<int>(quantity),
       'site_id': serializer.toJson<int>(site_id),
+      'update': serializer.toJson<DateTime>(update),
     };
   }
 
@@ -324,14 +381,19 @@ class Barn extends DataClass implements Insertable<Barn> {
       site_id: site_id == null && nullToAbsent
           ? const Value.absent()
           : Value(site_id),
+      update:
+          update == null && nullToAbsent ? const Value.absent() : Value(update),
     );
   }
 
-  Barn copyWith({int id, String name, int quantity, int site_id}) => Barn(
+  Barn copyWith(
+          {int id, String name, int quantity, int site_id, DateTime update}) =>
+      Barn(
         id: id ?? this.id,
         name: name ?? this.name,
         quantity: quantity ?? this.quantity,
         site_id: site_id ?? this.site_id,
+        update: update ?? this.update,
       );
   @override
   String toString() {
@@ -339,14 +401,17 @@ class Barn extends DataClass implements Insertable<Barn> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('quantity: $quantity, ')
-          ..write('site_id: $site_id')
+          ..write('site_id: $site_id, ')
+          ..write('update: $update')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => $mrjf($mrjc(id.hashCode,
-      $mrjc(name.hashCode, $mrjc(quantity.hashCode, site_id.hashCode))));
+  int get hashCode => $mrjf($mrjc(
+      id.hashCode,
+      $mrjc(name.hashCode,
+          $mrjc(quantity.hashCode, $mrjc(site_id.hashCode, update.hashCode)))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -354,7 +419,8 @@ class Barn extends DataClass implements Insertable<Barn> {
           other.id == this.id &&
           other.name == this.name &&
           other.quantity == this.quantity &&
-          other.site_id == this.site_id);
+          other.site_id == this.site_id &&
+          other.update == this.update);
 }
 
 class BarnsCompanion extends UpdateCompanion<Barn> {
@@ -362,28 +428,33 @@ class BarnsCompanion extends UpdateCompanion<Barn> {
   final Value<String> name;
   final Value<int> quantity;
   final Value<int> site_id;
+  final Value<DateTime> update;
   const BarnsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.quantity = const Value.absent(),
     this.site_id = const Value.absent(),
+    this.update = const Value.absent(),
   });
   BarnsCompanion.insert({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.quantity = const Value.absent(),
     this.site_id = const Value.absent(),
+    this.update = const Value.absent(),
   });
   BarnsCompanion copyWith(
       {Value<int> id,
       Value<String> name,
       Value<int> quantity,
-      Value<int> site_id}) {
+      Value<int> site_id,
+      Value<DateTime> update}) {
     return BarnsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       site_id: site_id ?? this.site_id,
+      update: update ?? this.update,
     );
   }
 }
@@ -434,8 +505,20 @@ class $BarnsTable extends Barns with TableInfo<$BarnsTable, Barn> {
         $customConstraints: 'NULL REFERENCES sites(id)');
   }
 
+  final VerificationMeta _updateMeta = const VerificationMeta('update');
+  GeneratedDateTimeColumn _update;
   @override
-  List<GeneratedColumn> get $columns => [id, name, quantity, site_id];
+  GeneratedDateTimeColumn get update => _update ??= _constructUpdate();
+  GeneratedDateTimeColumn _constructUpdate() {
+    return GeneratedDateTimeColumn(
+      'update',
+      $tableName,
+      true,
+    );
+  }
+
+  @override
+  List<GeneratedColumn> get $columns => [id, name, quantity, site_id, update];
   @override
   $BarnsTable get asDslTable => this;
   @override
@@ -460,6 +543,10 @@ class $BarnsTable extends Barns with TableInfo<$BarnsTable, Barn> {
     if (d.site_id.present) {
       context.handle(_site_idMeta,
           site_id.isAcceptableValue(d.site_id.value, _site_idMeta));
+    }
+    if (d.update.present) {
+      context.handle(
+          _updateMeta, update.isAcceptableValue(d.update.value, _updateMeta));
     }
     return context;
   }
@@ -486,6 +573,9 @@ class $BarnsTable extends Barns with TableInfo<$BarnsTable, Barn> {
     }
     if (d.site_id.present) {
       map['site_id'] = Variable<int, IntType>(d.site_id.value);
+    }
+    if (d.update.present) {
+      map['update'] = Variable<DateTime, DateTimeType>(d.update.value);
     }
     return map;
   }

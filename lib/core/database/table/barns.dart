@@ -8,4 +8,6 @@ class Barns extends Table {
   IntColumn get quantity => integer().nullable()();
 
   IntColumn get site_id => integer().nullable().customConstraint('NULL REFERENCES sites(id)')();
+
+  DateTimeColumn get update => dateTime().nullable()();
 }
