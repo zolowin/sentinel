@@ -9,7 +9,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:sentinel/core/database/app_database.dart';
 import 'package:sentinel/core/database/dao/site_dao.dart';
 import 'package:sentinel/helpers/routers.dart';
+import 'dart:convert';
 import 'dart:typed_data';
+
 
 class AddSite extends StatefulWidget {
 //  const AddSite({
@@ -77,7 +79,7 @@ class _AddSiteState extends State<AddSite> {
   }
 
   _displayImage(image, arg)  {
-    arg != null && arg.image != null ? _buildSiteImage(arg.image) : _buildImage(image);
+    return arg != null && arg.image != null ? _buildSiteImage(arg.image) : _buildImage(image);
   }
 
   @override
