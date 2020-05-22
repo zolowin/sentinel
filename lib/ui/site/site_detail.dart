@@ -4,32 +4,55 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
+import 'package:sentinel/core/database/dao/site_dao.dart';
+import 'package:sentinel/helpers/routers.dart';
 
-import 'site_list.dart';
 import 'add_site_page.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/dao/barn_dao.dart';
 
 class SiteDetail extends StatefulWidget {
-  static const routeName = '/siteDetail';
+//  static const routeName = '/siteDetail';
+  final ScreenArguments arguments;
+  SiteDetail(this.arguments);
   @override
   _SiteDetailState createState() => _SiteDetailState();
 }
 
 class _SiteDetailState extends State<SiteDetail> {
+  @override
+  // TODO: implement context
+  BuildContext get context => super.context;
+
   var formatter = new DateFormat('E, MMM dd hh-mm-ss');
 
+  _editOrDeleteSite (BuildContext context,value,id) {
+    final barnDao = Provider.of<BarnDao>(context, listen: false);
+    final siteDao = Provider.of<SiteDao>(context, listen: false);
+    switch (value) {
+      case 1 :
+          barnDao.deleteBarnBySiteId(id);
+          siteDao.deleteSiteById(id);
+          return Navigator.pushNamed(context, Routers.LIST);
+      case 2 :
+        return print('khỏi sửa');
+    }
+  }
 
   Widget _buildSiteImage(base64) {
     Uint8List _bytesImage;
 
     _bytesImage = Base64Decoder().convert(base64);
-    return Image.memory(_bytesImage, fit: BoxFit.fill,);
+    return Image.memory(
+      _bytesImage,
+      fit: BoxFit.fill,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final ScreenArguments arguments = ModalRoute.of(context).settings.arguments;
+    final dao = Provider.of<BarnDao>(context);
+//    final ScreenArguments arguments = ModalRoute.of(context).settings.arguments;
 
     Widget _buildListItem(Barn itemBarn) {
       return GestureDetector(
@@ -57,13 +80,13 @@ class _SiteDetailState extends State<SiteDetail> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          subtitle:
-                          Text("Updated at: ${formatter.format(itemBarn.update)}"),                        ),
+                          subtitle: Text(
+                              "Updated at: ${formatter.format(itemBarn.update)}"),
+                        ),
                       ),
                       Container(
                         alignment: Alignment.bottomLeft,
-                        padding:
-                        EdgeInsets.fromLTRB(25, 10.0, 0, 15.0),
+                        padding: EdgeInsets.fromLTRB(25, 10.0, 0, 15.0),
                         child: Text.rich(
                           TextSpan(
                             text: 'COUNT ',
@@ -103,9 +126,7 @@ class _SiteDetailState extends State<SiteDetail> {
       );
     }
 
-
-
-    StreamBuilder<List<Barn>> _buildBarnList(BuildContext context, id)  {
+    StreamBuilder<List<Barn>> _buildBarnList(BuildContext context, id) {
       final dao = Provider.of<BarnDao>(context);
       return StreamBuilder(
         stream: dao.watchAllBarnsBySiteId(id),
@@ -139,7 +160,9 @@ class _SiteDetailState extends State<SiteDetail> {
                 Container(
                   width: MediaQuery.of(context).size.width,
                   height: 340.0,
-                  child: arguments.image != null ? _buildSiteImage(arguments.image) : Container(),
+                  child: this.widget.arguments.image != null
+                      ? _buildSiteImage(this.widget.arguments.image)
+                      : Container(),
                 ),
                 Container(
                   padding: EdgeInsets.only(left: 10.0),
@@ -156,20 +179,30 @@ class _SiteDetailState extends State<SiteDetail> {
                             child: GestureDetector(
                               child: Icon(
                                 Icons.chevron_left,
-                                size: 50.0,
+                                size: 35.0,
                               ),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                    context, SiteList.routeName);
-                              },
+                              onTap: () =>
+                                  Navigator.pushNamed(context, Routers.LIST),
                             ),
                           ),
-                          IconTheme(
-                            data: new IconThemeData(color: Colors.white),
-                            child: new Icon(
-                              Icons.more_vert,
-                              size: 50.0,
-                            ),
+                          PopupMenuButton<int>(
+                            onSelected: (int result) {
+                              setState(() {
+                                _editOrDeleteSite(context, result ,this.widget.arguments.id);
+                              });
+                            },
+                            icon: Icon(Icons.more_vert, color: Colors.white,),
+                            itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<int>>[
+                              const PopupMenuItem<int>(
+                                value: 1,
+                                child: Icon(Icons.delete),
+                              ),
+                              const PopupMenuItem<int>(
+                                value: 2,
+                                child: Icon(Icons.edit),
+                              ),
+                            ],
                           ),
                         ],
                       )
@@ -185,13 +218,14 @@ class _SiteDetailState extends State<SiteDetail> {
                         width: double.maxFinite,
                         child: ListTile(
                           title: Text(
-                            arguments.name ?? "",
+                            this.widget.arguments.name ?? "",
                             style: TextStyle(
                                 fontSize: 28.0,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600),
                           ),
-                          subtitle: Text("Updated at: ${formatter.format(arguments.update)}",
+                          subtitle: Text(
+                            "Updated at: ${formatter.format(this.widget.arguments.update)}",
                             style: TextStyle(
                               fontSize: 18.0,
                               color: Colors.white,
@@ -200,39 +234,55 @@ class _SiteDetailState extends State<SiteDetail> {
                         ),
                       ),
                       SizedBox(
-                        height: 33.0,
+                        height: 27.0,
                       ),
-                      Container(
-                        padding: EdgeInsets.only(left: 10.0),
-                        width: double.maxFinite,
-                        child: ListTile(
-                          title: Text(
-                            arguments.quantity.toString(),
-                            style: TextStyle(
-                                fontSize: 24.0,
+                      FutureBuilder(
+                        future: dao.getCountPoBarnBySiteID(this.widget.arguments.id),
+                        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                          Widget children;
+                          if(snapshot.hasData) {
+                            children = Text(
+                              snapshot.data,
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(
-                            "Total Count",
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              color: Colors.white,
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            children = Text(snapshot.error);
+                          } else {
+                            children = Text('Awaiting result...');
+                          }
+                          return Container(
+                            padding: EdgeInsets.only(left: 10.0),
+                            width: double.maxFinite,
+                            child: ListTile(
+                              title: children,
+                              subtitle: Text(
+                                "Total Count",
+                                style: TextStyle(
+                                  fontSize: 18.0,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      )
+                          );
+                        },
+                      ),
+
                     ],
                   ),
                 ),
               ],
             ),
             Flexible(
-              child: _buildBarnList(context, arguments.id),
+              child: _buildBarnList(context, this.widget.arguments.id),
             ),
           ],
         ),
       ),
     );
+
   }
 }

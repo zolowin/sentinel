@@ -1,18 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sentinel/helpers/routers.dart';
 import '../site/add_site_page.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/database/dao/barn_dao.dart';
-import 'site_list.dart';
 
 class AddBarn extends StatefulWidget {
-  static const routeName = '/addBarn';
+  final ScreenArguments arguments;
 
-  const AddBarn({
-    Key key,
-  }) : super(key: key);
+  AddBarn(this.arguments);
 
   @override
   _AddBarnState createState() => _AddBarnState();
@@ -31,12 +29,10 @@ class _AddBarnState extends State<AddBarn> {
 
   @override
   Widget build(BuildContext context) {
-    final  ScreenArguments arguments = ModalRoute.of(context).settings.arguments;
-    for(int i=0; i < arguments.quantity* 2; i += 1) {
-      focusNodes.add(FocusNode());
-    }
+//    final  ScreenArguments arguments = ModalRoute.of(context).settings.arguments;
+    for(int i = 0; i < this.widget.arguments.quantity * 2; i += 1) focusNodes.add(FocusNode());
 
-    for(int i = 0; i < arguments.quantity; i += 1) {
+    for(int i = 0; i < this.widget.arguments.quantity; i += 1) {
       namesController.add(TextEditingController());
       quantityController.add(TextEditingController());
     }
@@ -55,18 +51,16 @@ class _AddBarnState extends State<AddBarn> {
               child: TextFormField(
                 // ignore: missing_return
                 validator: (value){
-                  if(value.isEmpty) {
-                    return "Barn Name can't empty";
-                  }
+                  if(value.isEmpty)  return "Barn Name can't empty";
                 },
                 controller: namesController[index],
                 keyboardType: TextInputType.text,
                 textCapitalization: TextCapitalization.sentences,
-                textInputAction: index != arguments.quantity ? TextInputAction.next : TextInputAction.done,
+                textInputAction: index != this.widget.arguments.quantity ? TextInputAction.next : TextInputAction.done,
                 autofocus: true,
                 focusNode: focusNodes[i], //0
                 onFieldSubmitted: (v){
-                  index != arguments.quantity ?
+                  index != this.widget.arguments.quantity ?
                   FocusScope.of(context).requestFocus(focusNodes[j])  //1
                   // ignore: unnecessary_statements
                       : null;
@@ -97,9 +91,7 @@ class _AddBarnState extends State<AddBarn> {
                 textInputAction: TextInputAction.next,
                 autofocus: true,
                 focusNode: focusNodes[j], //1
-                onFieldSubmitted: (v){
-                  FocusScope.of(context).requestFocus(focusNodes[j+1]); //2
-                },
+                onFieldSubmitted: (v) => FocusScope.of(context).requestFocus(focusNodes[j+1]),
                 decoration: InputDecoration(
                   labelText: "Number of Pens",
                   labelStyle: _labelStyle,
@@ -120,9 +112,9 @@ class _AddBarnState extends State<AddBarn> {
             color: Colors.black,
             iconSize: 30.0,
             onPressed: () {
-              editSite(arguments);
+              editSite(this.widget.arguments);
             }),
-        title: Text("${arguments.name} Site", style: TextStyle(color: Colors.black),),
+        title: Text("${this.widget.arguments.name} Site", style: TextStyle(color: Colors.black),),
         centerTitle: true,
         actions: <Widget>[
 
@@ -142,7 +134,7 @@ class _AddBarnState extends State<AddBarn> {
             ),
             onTap: () {
               _formKey.currentState.validate() ?
-              createNewBarn(context, _formKey, namesController, quantityController, arguments.id)
+              createNewBarn(context, _formKey, namesController, quantityController, this.widget.arguments.id)
                   : Scaffold.of(context)
                   .showSnackBar(SnackBar(content: Text('Not valid!')));
             },
@@ -156,7 +148,7 @@ class _AddBarnState extends State<AddBarn> {
         child: Form(
             key: _formKey,
             child: ListView.builder(
-              itemCount: int.parse(arguments.quantity.toString()),
+              itemCount: int.parse(this.widget.arguments.quantity.toString()),
               itemBuilder: (context, index) {
                 return _buildRow(index);
               },
@@ -171,13 +163,14 @@ class _AddBarnState extends State<AddBarn> {
         id: arguments.id,
         name: arguments.name,
         address: arguments.address,
-        quantity: arguments.quantity
+        quantity: arguments.quantity,
+        image: arguments.image,
     );
 
     Navigator.pushNamed(
       context,
-      AddSite.routeName,
-      arguments: BackScreenArguments(site.id, site.name, site.address, site.quantity),
+      Routers.ADD_SITE,
+      arguments: ScreenArguments(site.id, site.name, site.address, site.quantity, site.image, site.update),
     );
     print(site.id);
   }
@@ -199,7 +192,7 @@ class _AddBarnState extends State<AddBarn> {
     }
     Navigator.pushNamed(
       context,
-      SiteList.routeName,
+      Routers.LIST,
     );
   }
 
@@ -212,11 +205,11 @@ class _AddBarnState extends State<AddBarn> {
 
 }
 
-class BackScreenArguments {
-  final int id;
-  final String name;
-  final String address;
-  final int quantity;
-
-  BackScreenArguments(this.id, this.name, this.address, this.quantity);
-}
+//class BackScreenArguments {
+//  final int id;
+//  final String name;
+//  final String address;
+//  final int quantity;
+//
+//  BackScreenArguments(this.id, this.name, this.address, this.quantity);
+//}

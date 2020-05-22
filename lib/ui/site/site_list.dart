@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sentinel/core/database/dao/barn_dao.dart';
+import 'package:sentinel/helpers/routers.dart';
 import 'package:sentinel/ui/site/add_site_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -10,12 +11,9 @@ import 'package:intl/intl.dart';
 
 
 import '../../core/database/dao/site_dao.dart';
-import '../login/login_page.dart';
-import 'site_detail.dart';
 import '../../core/database/app_database.dart';
 
 class SiteList extends StatefulWidget {
-  static const routeName = '/siteList';
   @override
   _SiteListState createState() => _SiteListState();
 }
@@ -25,12 +23,6 @@ class _SiteListState extends State<SiteList> {
   String username;
   int _textFromFile = 0;
   var formatter = new DateFormat('E, MMM dd hh-mm-ss');
-
-  _SiteListState() {
-    getPoBarns(context, 1).then((val) => setState(() {
-      _textFromFile = val;
-    }));
-  }
 
   @override
   // TODO: implement context
@@ -65,7 +57,8 @@ class _SiteListState extends State<SiteList> {
 
   @override
   Widget build(BuildContext context) {
-    Widget _buildListItem(Site itemSite)  {
+    final dao = Provider.of<BarnDao>(context);
+      Widget _buildListItem(Site itemSite)  {
       return GestureDetector(
         child: Stack(
           children: <Widget>[
@@ -93,24 +86,35 @@ class _SiteListState extends State<SiteList> {
                             subtitle: itemSite.update != null ? Text("Updated at: ${formatter.format(itemSite.update)}") : Text(""),
                         ),
                       ),
-                      Container(
-                        alignment: Alignment.bottomLeft,
-                        padding: EdgeInsets.fromLTRB(25, 10.0, 0, 15.0),
-                        child: Text.rich(
-                          TextSpan(
-                            text: 'COUNT ',
-                            style: TextStyle(fontSize: 14.0),
-                            children: <TextSpan>[
-                              TextSpan(
-                                  text:  itemSite.quantity.toString(),
-                                  style: TextStyle(
-                                    color: Colors.lightBlue,
-                                  )),
-                              // can add more TextSpans here...
-                            ],
-                          ),
-                        ),
-                      )
+                      FutureBuilder(
+                        future: dao.getCountPoBarnBySiteID(itemSite.id),
+                        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                          Widget children;
+                          if(snapshot.hasData) {
+                            children = Text(
+                              snapshot.data,
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            children = Text(snapshot.error);
+                          } else {
+                            children = Text('Awaiting result...');
+                          }
+                          return Container(
+                            alignment: Alignment.bottomLeft,
+                            padding: EdgeInsets.fromLTRB(25, 10.0, 0, 15.0),
+                            child: Row(
+                              children: <Widget>[
+                                Text('Count', style: TextStyle(fontSize: 14.0),),
+                                SizedBox(width: 10.0,),
+                                children,
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -121,16 +125,12 @@ class _SiteListState extends State<SiteList> {
               right: 0,
               child: IconButton(
                 icon: Icon(Icons.keyboard_arrow_right), iconSize: 35.0,
-                onPressed: () {
-                  Navigator.pushNamed(context, SiteDetail.routeName, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image, itemSite.update));
-                },
+                onPressed: () => Navigator.pushNamed(context, Routers.DETAIL, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image, itemSite.update)),
               ),
             )
           ],
         ),
-        onTap: () {
-          Navigator.pushNamed(context, SiteDetail.routeName, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image, itemSite.update));
-        },
+        onTap: () => Navigator.pushNamed(context, Routers.DETAIL, arguments: ScreenArguments(itemSite.id, itemSite.name, itemSite.address, itemSite.quantity, itemSite.image, itemSite.update)),
       );
     }
 
@@ -162,9 +162,7 @@ class _SiteListState extends State<SiteList> {
         title: Text("My Sites", style: TextStyle(color: Colors.black),), centerTitle: true,
         actions: <Widget>[
           GestureDetector(
-            onTap: () {
-              Navigator.pushNamed(context, AddSite.routeName);
-            },
+            onTap: () => Navigator.pushNamed(context, Routers.ADD_SITE),
             child: Padding(
               padding: EdgeInsets.only(right: 20.0),
               child: Center(
@@ -252,7 +250,7 @@ class _SiteListState extends State<SiteList> {
                   ),
                   onTap: () {
                     logindata.setBool('login', true);
-                    Navigator.pushNamed(context, LoginPage.routeName);
+                    Navigator.pushNamed(context, Routers.LOGIN);
                   },
                 )
             ),

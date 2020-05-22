@@ -8,6 +8,7 @@ import 'package:sentinel/ui/site/add_site_page.dart';
 import 'package:sentinel/ui/site/site_detail.dart';
 import 'package:sentinel/ui/site/add_barn_page.dart';
 
+import 'helpers/routers.dart';
 import 'ui/login/login_page.dart';
 import 'ui/site/site_detail.dart';
 import 'ui/site/site_list.dart';
@@ -24,16 +25,9 @@ class MyApp extends StatelessWidget {
         Provider(create: (_) => db.barnDao),
         Provider(create: (_) => db.siteDao),
       ],
-      child: MaterialApp(
-        title: 'Sentinel',
-        initialRoute: LoginPage.routeName,
-        routes: <String, WidgetBuilder>{
-          LoginPage.routeName: (context) => LoginPage(),
-          SiteList.routeName: (context) => SiteList(),
-          SiteDetail.routeName : (context) => SiteDetail(),
-          AddSite.routeName : (context) => AddSite(),
-          AddBarn.routeName : (context) => AddBarn(),
-        },
+      child:MaterialApp(
+        onGenerateRoute: Routers.generateRoute,
+        initialRoute: Routers.LOGIN,
       ),
     );
   }

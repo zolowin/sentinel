@@ -23,7 +23,6 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 5;
 
-
   Future<void> clearData() async {
     await siteDao.deleteAll();
     await barnDao.deleteAll();

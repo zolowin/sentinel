@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sentinel/helpers/routers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../site/site_list.dart';
 
 class LoginPage extends StatefulWidget {
-  static const routeName = '/loginPage';
+//  static const routeName = '/loginPage';
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -34,10 +35,7 @@ class _LoginPageState extends State<LoginPage> {
     logindata = await SharedPreferences.getInstance();
     newuser = (logindata.getBool('login') ?? true);
     print(newuser);
-    if (newuser == false) {
-      Navigator.pushReplacement(
-          context, new MaterialPageRoute(builder: (context) => SiteList()));
-    }
+    if (newuser == false) Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => SiteList()));
   }
 
   @override
@@ -85,10 +83,9 @@ class _LoginPageState extends State<LoginPage> {
   void _setLogged(BuildContext context, logindata, username_controller) {
     String username = username_controller.text;
 
-    print('OK');
     logindata.setBool('login', false);
     logindata.setString('username', username);
-    Navigator.pushNamed(context, SiteList.routeName);
+    Navigator.pushNamed(context, Routers.LIST);
   }
 
   Expanded _textSection() {
@@ -141,15 +138,13 @@ class _LoginPageState extends State<LoginPage> {
                         RegExp regex = new RegExp(pattern);
                         if (!regex.hasMatch(value)) return 'Enter Valid Email';
                         if (value.isEmpty) return "You can't have an empty username.";
-                        if (value != account['username']) return "Email not match";
+                        if (value.trim() != account['username']) return "Email not match";
                       },
                       controller: username_controller,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autofocus: true,
-                      onFieldSubmitted: (v) {
-                        FocusScope.of(context).requestFocus(focus);
-                      },
+                      onFieldSubmitted: (v) => FocusScope.of(context).requestFocus(focus),
                       decoration: const InputDecoration(
                         fillColor: Color(0xffACB1C0),
                         filled: true,
@@ -179,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                         if (!regex.hasMatch(value)) {
                           return "Password must be contains at least one upper case, lower case, digit and special charater";
                         }
-                        if(value != account['password']) return "Password not match";
+                        if(value.trim() != account['password']) return "Password not match";
                       },
                       controller: password_controller,
                       keyboardType: TextInputType.text,

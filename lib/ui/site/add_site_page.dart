@@ -8,14 +8,15 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sentinel/core/database/app_database.dart';
 import 'package:sentinel/core/database/dao/site_dao.dart';
-import 'package:sentinel/ui/site/add_barn_page.dart';
+import 'package:sentinel/helpers/routers.dart';
+import 'dart:typed_data';
 
 class AddSite extends StatefulWidget {
-  static const routeName = '/addSite';
-
-  const AddSite({
-    Key key,
-  }) : super(key: key);
+//  const AddSite({
+//    Key key,
+//  }) : super(key: key);
+  final ScreenArguments arguments;
+  AddSite(this.arguments);
 
   @override
   _AddSiteState createState() => _AddSiteState();
@@ -47,38 +48,50 @@ class _AddSiteState extends State<AddSite> {
 
    open_camera() async {
     var image = await ImagePicker.pickImage(source: ImageSource.camera);
-    setState(() {
-      _image = image;
-    });
+    setState(() => _image = image);
     List<int> imageBytes = await image.readAsBytes();
     String base64Image = base64Encode(imageBytes);
-    print(base64Image.substring(0, 100));
     return base64Image;
   }
 
   open_gallery() async {
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      _image = image;
-    });
+    setState(() => _image = image);
     List<int> imageBytes = await image.readAsBytes();
     String base64Image = base64Encode(imageBytes);
     print(base64Image.substring(0, 100));
     return base64Image;
   }
 
+  Widget _buildSiteImage(base64) {
+    Uint8List _bytesImage;
+
+    _bytesImage = Base64Decoder().convert(base64);
+    return Image.memory(_bytesImage);
+  }
+
+  Widget _buildImage(image) {
+    return image == null
+        ? Text("Still waiting!")
+        : Image.file(image , fit: BoxFit.fill,);
+  }
+
+  _displayImage(image, arg)  {
+    arg != null && arg.image != null ? _buildSiteImage(arg.image) : _buildImage(image);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final BackScreenArguments args = ModalRoute.of(context).settings.arguments;
-    args != null
-        ? nameController = TextEditingController(text: args.name)
+//    final BackScreenArguments args = ModalRoute.of(context).settings.arguments;
+    this.widget.arguments != null
+        ? nameController = TextEditingController(text: this.widget.arguments.name)
         : TextEditingController();
-    args != null
-        ? addressController = TextEditingController(text: args.address)
+    this.widget.arguments != null
+        ? addressController = TextEditingController(text: this.widget.arguments.address)
         : TextEditingController();
-    args != null
+    this.widget.arguments != null
         ? quantityController =
-            TextEditingController(text: args.quantity.toString())
+            TextEditingController(text: this.widget.arguments.quantity.toString())
         : TextEditingController();
 
     return Scaffold(
@@ -109,9 +122,9 @@ class _AddSiteState extends State<AddSite> {
               _formKey.currentState.validate()
                   ?
                   // ignore: unnecessary_statements
-                  (args != null
-                      ? editSite(context, _formKey, args.id, nameController,
-                          addressController, quantityController)
+                  (this.widget.arguments != null
+                      ? editSite(context, _formKey, this.widget.arguments.id, nameController,
+                          addressController, quantityController, siteImage)
                       : createNewSite(context, _formKey, nameController,
                           addressController, quantityController, siteImage))
                   : Scaffold.of(context)
@@ -168,9 +181,7 @@ class _AddSiteState extends State<AddSite> {
                         textInputAction: TextInputAction.next,
                         autofocus: true,
                         focusNode: focus1,
-                        onFieldSubmitted: (v) {
-                          FocusScope.of(context).requestFocus(focus2);
-                        },
+                        onFieldSubmitted: (v) => FocusScope.of(context).requestFocus(focus2),
                         decoration: InputDecoration(
                             labelText: "Site Address", labelStyle: _labelStyle),
                       ),
@@ -207,13 +218,11 @@ class _AddSiteState extends State<AddSite> {
                   child: Column(
                     children: [
                       Container(
-                        alignment: Alignment.center,
                         color: Colors.black12,
                         height: 250.0,
                         width: 250.0,
-                        child: _image == null
-                            ? Text("Still waiting!")
-                            : Image.file(_image , fit: BoxFit.cover,),
+                        child: _displayImage(_image, this.widget.arguments) ?? _buildImage(_image),
+//                        child: _buildImage(_image),
                       ),
                       FlatButton(
                         color: Colors.deepOrangeAccent,
@@ -221,9 +230,7 @@ class _AddSiteState extends State<AddSite> {
                           "Open Camera",
                           style: TextStyle(color: Colors.white),
                         ),
-                        onPressed: () async {
-                          siteImage = await open_camera();
-                        },
+                        onPressed: () async => siteImage = await open_camera(),
                       ),
                       FlatButton(
                         color: Colors.limeAccent,
@@ -231,9 +238,7 @@ class _AddSiteState extends State<AddSite> {
                           "Open Gallery",
                           style: TextStyle(color: Colors.black),
                         ),
-                        onPressed: () async {
-                          siteImage = await open_gallery();
-                        },
+                        onPressed: () async => siteImage = await open_gallery(),
                       )
                     ],
                   ),
@@ -263,13 +268,13 @@ class _AddSiteState extends State<AddSite> {
     resetValuesAfterSubmit();
     Navigator.pushNamed(
       context,
-      AddBarn.routeName,
+      Routers.ADD_BARN,
       arguments: ScreenArguments(id, site.name, site.address, site.quantity, site.image, site.update),
     );
   }
 
   void editSite(BuildContext context, key, id, nameController,
-      addressController, quantityController) {
+      addressController, quantityController, siteImage) {
     key.currentState.save();
 
     final dao = Provider.of<SiteDao>(context, listen: false);
@@ -279,6 +284,7 @@ class _AddSiteState extends State<AddSite> {
       name: nameController.text,
       address: addressController.text,
       quantity: int.parse(quantityController.text),
+      image: siteImage,
       update: new DateTime.now(),
     );
     print('edit');
@@ -286,7 +292,7 @@ class _AddSiteState extends State<AddSite> {
     resetValuesAfterSubmit();
     Navigator.pushNamed(
       context,
-      AddBarn.routeName,
+      Routers.ADD_BARN,
       arguments:
           ScreenArguments(site.id, site.name, site.address, site.quantity, site.image, site.update),
     );

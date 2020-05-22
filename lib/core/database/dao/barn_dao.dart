@@ -23,14 +23,14 @@ class BarnDao extends DatabaseAccessor<AppDatabase> with _$BarnDaoMixin {
   Future<Barn> getBarnById(int id) => (select(barns)
     ..where((t) => t.id.equals(id))).getSingle();
 
-  Future<int> getCountPoBarnBySiteID(int id) async {
+  Future<String> getCountPoBarnBySiteID(int id) async {
     int count = 0;
     List<Barn> barns = await getAllBarnsBySiteId(id);
 
     for(var item in barns) {
       count += item.quantity;
     }
-    return barns == null ? 0 : count;
+    return count.toString();
   }
 
   Stream<List<Barn>> watchAllBarns() => (select(barns)
@@ -52,6 +52,9 @@ class BarnDao extends DatabaseAccessor<AppDatabase> with _$BarnDaoMixin {
 
   Future deleteBarnById(int id) => (delete(barns)
     ..where((t) => t.id.equals(id))).go();
+
+  Future deleteBarnBySiteId(int id) => (delete(barns)
+    ..where((t) => t.site_id.equals(id))).go();
 
   Future deleteAll() => delete(barns).go();
 }
